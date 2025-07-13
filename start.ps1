@@ -1,9 +1,16 @@
 Write-Host "Starting CodeTech Learning Platform..." -ForegroundColor Green
 Write-Host ""
 
+# Check if virtual environment exists
+if (-not (Test-Path "backend\venv")) {
+    Write-Host "Error: Virtual environment not found!" -ForegroundColor Red
+    Write-Host "Please run '.\run-all.ps1' first to set up the environment." -ForegroundColor Yellow
+    exit 1
+}
+
 Write-Host "Starting Backend Server..." -ForegroundColor Yellow
 Set-Location backend
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "python main.py"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", ".\venv\Scripts\Activate.ps1; uvicorn main:app --reload --host 0.0.0.0 --port 8000"
 
 Write-Host ""
 Write-Host "Starting Frontend Server..." -ForegroundColor Yellow

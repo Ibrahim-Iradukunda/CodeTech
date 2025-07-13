@@ -17,6 +17,5 @@ echo Backend: http://localhost:8000
 echo Frontend: http://localhost:3000
 echo.
 echo Admin Login: AdminIbra@gmail.com / IbraGold@1
-echo Student Login: student@alu.edu / password123
 echo.
 pause 

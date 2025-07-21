@@ -60,7 +60,7 @@ export default function LeaderboardPage() {
         setLeaderboard(leaderboardRes.data)
 
         // Get user stats (if user is logged in)
-        const token = localStorage.getItem("token")
+        const token = localStorage.getItem("authToken")
         if (token) {
           try {
             const statsRes = await getUserStats(token)

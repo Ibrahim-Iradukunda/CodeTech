@@ -2467,3 +2467,36 @@ def admin_cleanup_null_activity(admin_user: User = Depends(get_current_admin_use
     deleted = db.query(UserActivity).filter(UserActivity.score == None).delete()
     db.commit()
     return {"deleted": deleted, "message": "Removed UserActivity records with null score."}
+
+# --- Endpoint: Platform-wide Stats for Homepage ---
+@app.get("/platform-stats")
+def get_platform_stats(db: Session = Depends(get_db)):
+    # Active students: users with at least one activity
+    active_user_ids = db.query(UserActivity.user_id).distinct()
+    active_students = db.query(User).filter(User.id.in_(active_user_ids)).count()
+
+    # Quizzes completed: count of all completed quizzes
+    quizzes_completed = db.query(UserQuizProgress).filter_by(completed=1).count()
+
+    # Average score: average of all quiz scores
+    scores = db.query(UserActivity.score).filter(UserActivity.score != None).all()
+    score_values = [s[0] for s in scores if s[0] is not None]
+    average_score = int(sum(score_values) / len(score_values)) if score_values else 0
+
+    # Top performers: users with avg score >= 80%
+    user_ids = db.query(User.id).all()
+    top_performers = 0
+    for (user_id,) in user_ids:
+        user_scores = db.query(UserActivity.score).filter(UserActivity.user_id == user_id, UserActivity.score != None).all()
+        user_score_values = [s[0] for s in user_scores if s[0] is not None]
+        if user_score_values:
+            avg = sum(user_score_values) / len(user_score_values)
+            if avg >= 80:
+                top_performers += 1
+
+    return {
+        "activeStudents": active_students,
+        "quizzesCompleted": quizzes_completed,
+        "averageScore": average_score,
+        "topPerformers": top_performers,
+    }

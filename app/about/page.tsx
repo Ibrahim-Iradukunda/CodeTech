@@ -376,11 +376,6 @@ export default function AboutPage() {
                                 Get Started Free
                             </Button>
                         </Link>
-                        <Link href="/dashboard">
-                            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600">
-                                Explore Subjects
-                            </Button>
-                        </Link>
                     </div>
                 </div>
             </section>

@@ -33,7 +33,6 @@ export default function QuizPage() {
   // Quiz state management
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0) // Track current question
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null) // User's selected answer
-  const [showResult, setShowResult] = useState(false) // Show feedback for current question
   const [answers, setAnswers] = useState<{ [key: number]: string }>({}) // Store all user answers
   const [timeLeft, setTimeLeft] = useState(300) // Timer: 5 minutes (300 seconds)
   const [quizCompleted, setQuizCompleted] = useState(false) // Quiz completion status
@@ -42,6 +41,11 @@ export default function QuizPage() {
   const [error, setError] = useState<string | null>(null) // Error message state
   const [currentQuiz, setCurrentQuiz] = useState<any>(null) // Current quiz data
   const [loading, setLoading] = useState(true) // Loading state for data fetching
+  // Add a new state for tracking correct answers count and a state for blocking level up
+  const [correctCount, setCorrectCount] = useState(0); // Track number of correct answers
+  const [levelUpAllowed, setLevelUpAllowed] = useState(true); // Block level up if not enough correct
+  const [showLevelUpError, setShowLevelUpError] = useState(false); // Show error if not enough correct
+  const [showFeedback, setShowFeedback] = useState(false); // Show feedback after answer
 
   // Effect hook to fetch quiz data when component mounts or parameters change
   useEffect(() => {
@@ -72,7 +76,7 @@ export default function QuizPage() {
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
-          handleShowResult() // Auto-submit when time runs out
+          handleQuizComplete(); // Auto-submit when time runs out
           return 0
         }
         return prev - 1 // Decrease timer by 1 second
@@ -87,46 +91,54 @@ export default function QuizPage() {
 
   // Handle user selecting an answer for the current question
   const handleAnswerSelect = (answer: string) => {
-    setSelectedAnswer(answer) // Update selected answer for current question
-    setAnswers((prev) => ({ ...prev, [currentQuestionIndex]: answer })) // Store answer in answers object
-  }
+    setSelectedAnswer(answer);
+    if (currentQuestion && currentQuestion.id !== undefined) {
+      setAnswers((prev) => ({ ...prev, [currentQuestion.id]: answer }));
+    }
+    setShowFeedback(true);
+  };
 
   // Handle progression to next question or quiz completion
   const handleNextQuestion = () => {
     if (selectedAnswer) {
+      // Count correct answers as we go
+      if (selectedAnswer === currentQuestion.correct) {
+        setCorrectCount((prev) => prev + 1);
+      }
       if (currentQuestionIndex < currentQuiz.questions.length - 1) {
         // Move to next question
         setCurrentQuestionIndex(currentQuestionIndex + 1)
         setSelectedAnswer(null) // Reset selected answer for new question
-        setShowResult(false) // Hide result feedback
+        setShowFeedback(false) // Hide result feedback
       } else {
-        // This is the last question, complete the quiz
-        setQuizCompleted(true)
-        // Calculate final score
-        let correctCount = 0
-        currentQuiz.questions.forEach((question: any, index: number) => {
-          if (answers[index] === question.correct) {
-            correctCount++
-          }
-        })
-        setScore(Math.round((correctCount / currentQuiz.questions.length) * 100)) // Calculate percentage
-        // Call handleQuizComplete to save progress in backend
+        // Last question: check if user can level up
+        const finalCorrect =
+          (selectedAnswer === currentQuestion.correct ? correctCount + 1 : correctCount);
+        setCorrectCount(finalCorrect);
+        setQuizCompleted(true);
+        setScore(Math.round((finalCorrect / currentQuiz.questions.length) * 100));
+        // Always call handleQuizComplete to update stats
+        if (finalCorrect === currentQuiz.questions.length) {
+          setLevelUpAllowed(true);
+        } else {
+          setLevelUpAllowed(false);
+        }
         handleQuizComplete();
       }
     }
   }
 
   // Show feedback for current question without completing quiz
-  const handleShowResult = () => {
-    setShowResult(true) // Show immediate feedback for current question
-    // Don't complete the quiz yet, just show feedback for current question
-  }
+  // Remove the handleShowResult function entirely
 
   const handleQuizComplete = async () => {
     try {
       const token = localStorage.getItem("authToken")
       if (token) {
-        await submitQuiz(subjectId, levelId, answers, token)
+        const res = await submitQuiz(subjectId, levelId, answers, token)
+        setScore(res.score)
+        setCorrectCount(res.correct)
+        setResult(res)
         // Redirect to subject page to refresh progress
         router.push(`/subject/${subjectId}`)
       }
@@ -209,26 +221,25 @@ export default function QuizPage() {
                   {score}%
                 </div>
                 <p className="text-slate-600">
-                  You got{" "}
-                  {
-                    Object.values(answers).filter((answer: string, index: number) => answer === currentQuiz.questions[index]?.correct)
-                      .length
-                  }{" "}
-                  out of {currentQuiz.questions.length} questions correct
+                  You got {correctCount} out of {currentQuiz.questions.length} questions correct
                 </p>
+                {!levelUpAllowed && (
+                  <div className="mt-4 text-red-600 font-semibold">
+                    You must answer all questions correctly before you can proceed to the next level.
+                  </div>
+                )}
               </div>
 
               <div className="space-y-4">
                 <h3 className="font-semibold text-slate-900">Question Review:</h3>
                 {currentQuiz.questions.map((question: any, index: number) => {
-                  const userAnswer = answers[index]
-                  const isCorrect = userAnswer === question.correct
+                  const userAnswer = answers[question.id];
+                  const isCorrect = userAnswer === question.correct;
 
                   return (
                     <div
                       key={question.id}
-                      className={`p-4 rounded-lg border-2 ${isCorrect ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"
-                        }`}
+                      className={`p-4 rounded-lg border-2 ${isCorrect ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}`}
                     >
                       <div className="flex items-start space-x-3">
                         {isCorrect ? (
@@ -284,6 +295,14 @@ export default function QuizPage() {
                   <RotateCcw className="w-4 h-4 mr-2" />
                   Retake Quiz
                 </Button>
+                {levelUpAllowed && (
+                  <Button
+                    onClick={() => router.push(`/quiz/${subjectId}/${levelId + 1}`)}
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                  >
+                    Proceed to Next Level
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -361,6 +380,7 @@ export default function QuizPage() {
                       ? "border-blue-500 bg-blue-50"
                       : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
                       }`}
+                    disabled={!!selectedAnswer} // Disable all options after selection
                   >
                     <div className="flex items-center space-x-3">
                       <div
@@ -375,7 +395,7 @@ export default function QuizPage() {
                 ))}
               </div>
 
-              {showResult && (
+              {showFeedback && (
                 <Alert
                   className={`${selectedAnswer === currentQuestion.correct
                     ? "border-green-200 bg-green-50"
@@ -421,15 +441,12 @@ export default function QuizPage() {
                 </Alert>
               )}
 
-              <div className="flex justify-between pt-4">
+              <div className="flex justify-end pt-4">
                 <Button
-                  variant="outline"
-                  onClick={handleShowResult}
-                  disabled={!selectedAnswer || showResult}
+                  onClick={handleNextQuestion}
+                  disabled={!selectedAnswer || !showFeedback}
+                  className="bg-blue-600 hover:bg-blue-700"
                 >
-                  {showResult ? "Answer Checked" : "Check Answer"}
-                </Button>
-                <Button onClick={handleNextQuestion} disabled={!showResult} className="bg-blue-600 hover:bg-blue-700">
                   {currentQuestionIndex < currentQuiz.questions.length - 1 ? (
                     <>
                       Next Question

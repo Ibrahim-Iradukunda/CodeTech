@@ -105,6 +105,18 @@ export default function DashboardPage() {
     router.push("/") // Redirect to homepage
   }
 
+  // Helper to get first name from user object or localStorage
+  const getFirstName = () => {
+    if (user?.name && typeof user.name === 'string') {
+      return user.name.split(' ')[0];
+    }
+    const storedName = typeof window !== 'undefined' ? localStorage.getItem('userName') : null;
+    if (storedName) {
+      return storedName.split(' ')[0];
+    }
+    return '';
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
@@ -170,7 +182,7 @@ export default function DashboardPage() {
       <div className="container mx-auto px-4 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Welcome back, {user?.name ? user.name.split(" ")[0] : ""}! 👋</h1>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Welcome, {getFirstName()}! 👋</h1>
           <p className="text-slate-600">Ready to continue your learning journey?</p>
         </div>
 

@@ -23,7 +23,7 @@ import { Code, Eye, EyeOff, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 // Import API function for user authentication
-import { login } from "@/lib/api"
+import { login, getMe } from "@/lib/api"
 
 export default function LoginPage() {
   // Form input state management
@@ -49,6 +49,15 @@ export default function LoginPage() {
       const data = await login({ email, password })
       // Store the JWT token in localStorage for future requests
       localStorage.setItem("authToken", data.access_token)
+      // Fetch user profile and store name in localStorage for instant access
+      try {
+        const user = await getMe(data.access_token)
+        if (user && user.name) {
+          localStorage.setItem("userName", user.name)
+        }
+      } catch (e) {
+        // Ignore if profile fetch fails
+      }
       // Redirect to dashboard after successful login
       router.push("/dashboard")
     } catch (err: any) {

@@ -37,11 +37,18 @@ def insert_admin_user(conn):
     else:
         print("Admin user already exists.")
 
+def set_default_names(conn):
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET name = 'Test User' WHERE name IS NULL OR name = '';")
+    conn.commit()
+
 def main():
     conn = sqlite3.connect(DB_PATH)
     add_columns_if_missing(conn)
     insert_admin_user(conn)
+    set_default_names(conn)
     conn.close()
+    print("Set default names for users with empty or null name.")
 
 if __name__ == "__main__":
     main() 

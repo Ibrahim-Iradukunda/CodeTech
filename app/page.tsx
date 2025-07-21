@@ -18,7 +18,7 @@ import { BookOpen, Trophy, Users, TrendingUp, ArrowRight, Star, Code, Brain, Zap
 // Import Next.js routing component
 import Link from "next/link"
 // Import API function to get user's subjects
-import { getUserSubjects } from "@/lib/api"
+import { getUserSubjects, getPlatformStats } from "@/lib/api"
 
 export default function HomePage() {
   // State management for user authentication status
@@ -27,6 +27,9 @@ export default function HomePage() {
   const [subjects, setSubjects] = useState<any[]>([])
   // Loading state for API calls
   const [loading, setLoading] = useState(true)
+  // State for homepage stats
+  const [platformStats, setPlatformStats] = useState<any>(null)
+  const [statsLoading, setStatsLoading] = useState(true)
 
   // Effect hook that runs on component mount to check authentication and load data
   useEffect(() => {
@@ -86,14 +89,20 @@ export default function HomePage() {
       ])
       setLoading(false)
     }
+
+    // Fetch platform stats
+    getPlatformStats()
+      .then(setPlatformStats)
+      .catch(() => setPlatformStats(null))
+      .finally(() => setStatsLoading(false))
   }, [])
 
-  // Static statistics data for the homepage stats section
+  // Dynamic statistics data for the homepage stats section
   const stats = [
-    { label: "Active Students", value: "1,247", icon: Users, color: "text-blue-600" },
-    { label: "Quizzes Completed", value: "15,432", icon: BookOpen, color: "text-green-600" },
-    { label: "Average Score", value: "78%", icon: TrendingUp, color: "text-purple-600" },
-    { label: "Top Performers", value: "156", icon: Trophy, color: "text-yellow-600" },
+    { label: "Active Students", value: statsLoading ? "..." : (platformStats?.activeStudents?.toLocaleString?.() ?? 0), icon: Users, color: "text-blue-600" },
+    { label: "Quizzes Completed", value: statsLoading ? "..." : (platformStats?.quizzesCompleted?.toLocaleString?.() ?? 0), icon: BookOpen, color: "text-green-600" },
+    { label: "Average Score", value: statsLoading ? "..." : (platformStats?.averageScore !== undefined ? `${platformStats.averageScore}%` : "-"), icon: TrendingUp, color: "text-purple-600" },
+    { label: "Top Performers", value: statsLoading ? "..." : (platformStats?.topPerformers?.toLocaleString?.() ?? 0), icon: Trophy, color: "text-yellow-600" },
   ]
 
   return (
@@ -328,10 +337,10 @@ export default function HomePage() {
               <ul className="space-y-2 text-slate-400 text-sm">
                 <li>Gaddiel Irakoze - Product Owner</li>
                 <li>Adeodatus Nkundimana - Developer</li>
-                <li>Mohammed Ahmed Khalid - DevOps</li>
-                <li>Iradukunda Ibrahim - Scrum Master</li>
-                <li>Elvin Cyubahiro - QA Tester</li>
                 <li>Effiong Uyo - UX Designer</li>
+                <li>Ahmed Khalid - DevOps</li>
+                <li>Elvin Cyubahiro - QA Tester</li>
+                <li>Iradukunda Ibrahim - Scrum Master</li>
               </ul>
             </div>
           </div>

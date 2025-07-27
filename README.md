@@ -83,5 +83,26 @@ You can run the application in two ways:
    Frontend: http://localhost:3000
    ```
 
+### 🌐 Second Method: use the hosted version
 
+**To access the application online without setting it up locally, visit:**
+🔗 [CodeTech Public_server version](https://code-tech-project.vercel.app/)
 
+## 🧪 Tech stuck
+```
+| Frontend     | Backend                   | Other Tools         |
+| ------------ | ------------------------- | ------------------- |
+| Next.js      | Python (Flask or FastAPI) | PowerShell Scripts  |
+| TypeScript   | REST APIs                 | Vercel Hosting      |
+| Tailwind CSS | SQLite / Users.db         | Google Drive (Demo) |
+
+```
+
+## Authors
+
+Gaddiel Irakoze - Product Owner
+Adeodatus Nkundimana - Developer
+Effiong Uyo - UX Designer
+Ahmed Khalid - DevOps
+Elvin Cyubahiro - QA Tester
+Iradukunda Ibrahim - Scrum Master

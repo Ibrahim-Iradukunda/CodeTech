@@ -100,9 +100,9 @@ You can run the application in two ways:
 
 ## Authors
 
-**Gaddiel Irakoze - Product Owner**
-**Adeodatus Nkundimana - Developer**
-**Effiong Uyo - UX Designer**
-**Ahmed Khalid - DevOps**
-**Elvin Cyubahiro - QA Tester**
-**Iradukunda Ibrahim - Scrum Master**
+#### Gaddiel Irakoze - Product Owner
+#### Adeodatus Nkundimana - Developer
+#### Effiong Uyo - UX Designer
+#### Ahmed Khalid - DevOps
+#### Elvin Cyubahiro - QA Tester
+#### Iradukunda Ibrahim - Scrum Master
